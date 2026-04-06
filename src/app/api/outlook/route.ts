@@ -3,13 +3,13 @@ import {
   getUnreadEmails,
   getEmailBody,
   sendReply,
-  archiveEmail,
+  deleteEmail,
   markAsRead,
   decryptTokens,
-} from "@/app/lib/gmail";
+} from "@/app/lib/outlook";
 
 function getTokens(request: NextRequest) {
-  const cookie = request.cookies.get("gmail_tokens");
+  const cookie = request.cookies.get("m365_tokens");
   if (!cookie) return null;
   try {
     return decryptTokens(cookie.value);
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   const tokens = getTokens(request);
   if (!tokens) {
     return NextResponse.json(
-      { error: "Not authenticated. Please connect Gmail first." },
+      { error: "Not authenticated. Please connect Outlook first." },
       { status: 401 }
     );
   }
@@ -40,11 +40,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ body });
       }
       case "reply": {
-        await sendReply(tokens, params.messageId, params.threadId, params.body);
+        await sendReply(tokens, params.messageId, params.body);
         return NextResponse.json({ success: true });
       }
-      case "archive": {
-        await archiveEmail(tokens, params.messageId);
+      case "delete": {
+        await deleteEmail(tokens, params.messageId);
         return NextResponse.json({ success: true });
       }
       case "markRead": {
@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error: any) {
-    console.error(`Gmail API error (${action}): ${error.message || "unknown"}`);
+    console.error(`Outlook API error (${action}): ${error.message || "unknown"}`);
     return NextResponse.json(
-      { error: "Gmail API error" },
+      { error: "Outlook API error" },
       { status: 500 }
     );
   }

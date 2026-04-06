@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 
 // Proxy endpoint for the OpenAI Responses API
 export async function POST(req: NextRequest) {
-  const cookie = req.cookies.get("gmail_tokens");
+  const cookie = req.cookies.get("m365_tokens");
   if (!cookie) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -29,7 +29,7 @@ async function structuredResponse(openai: OpenAI, body: any) {
     return NextResponse.json(response);
   } catch (err: any) {
     console.error('responses proxy error', err);
-    return NextResponse.json({ error: 'failed' }, { status: 500 }); 
+    return NextResponse.json({ error: 'failed' }, { status: 500 });
   }
 }
 
@@ -46,4 +46,3 @@ async function textResponse(openai: OpenAI, body: any) {
     return NextResponse.json({ error: 'failed' }, { status: 500 });
   }
 }
-  

@@ -40,7 +40,7 @@ function App() {
     useState<SessionStatus>("DISCONNECTED");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  // Check Gmail auth status on load
+  // Check auth status on load
   useEffect(() => {
     fetch("/api/auth/status")
       .then((r) => r.json())
@@ -149,14 +149,14 @@ function App() {
       <div className="flex flex-col items-center justify-center h-screen bg-gray-950 text-white gap-6 px-8">
         <div className="text-4xl font-bold">Voice Nav</div>
         <p className="text-gray-400 text-center text-lg max-w-md">
-          Hands-free email triage for your commute. Connect your Gmail to get
+          Hands-free email triage for your commute. Connect your Outlook to get
           started.
         </p>
         <a
           href="/api/auth"
           className="bg-white text-gray-950 font-semibold text-xl px-8 py-4 rounded-2xl active:scale-95 transition-transform"
         >
-          Connect Gmail
+          Connect Outlook
         </a>
       </div>
     );

@@ -1,7 +1,7 @@
 import { RealtimeAgent, tool } from "@openai/agents/realtime";
 
-async function gmailApi(body: Record<string, any>) {
-  const res = await fetch("/api/gmail", {
+async function outlookApi(body: Record<string, any>) {
+  const res = await fetch("/api/outlook", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -24,11 +24,11 @@ NEVER invent, guess, or assume any email content. You MUST call get_next_email a
 # Behavior
 1. When the session starts, immediately call get_email_count. While waiting, say something brief like "Let me check your inbox." Only state the count once you have the tool result.
 2. Then call get_next_email. Wait for the result before saying anything about the email. Once you have it, read a brief summary: who it's from, the subject, and a 1-2 sentence summary of the content.
-3. After summarizing, ask: "Would you like to reply, skip, or archive this one?"
+3. After summarizing, ask: "Would you like to reply, skip, or delete this one?"
 4. Based on their response:
    - **Reply**: Ask what they'd like to say. Draft the reply, read it back to them, and ask to confirm before sending. If they confirm, call reply_to_email.
    - **Skip**: Call skip_email and move to the next one.
-   - **Archive**: Call archive_email and move to the next one.
+   - **Delete**: Call delete_email and move to the next one.
 5. After each action, automatically call get_next_email for the next one.
 6. When get_next_email returns done=true, let them know they're all caught up.
 
@@ -52,7 +52,7 @@ NEVER invent, guess, or assume any email content. You MUST call get_next_email a
         additionalProperties: false,
       },
       execute: async () => {
-        const data = await gmailApi({ action: "list", maxResults: 50 });
+        const data = await outlookApi({ action: "list", maxResults: 50 });
         if (data.error) return { error: data.error };
         return { count: data.emails?.length || 0 };
       },
@@ -70,7 +70,7 @@ NEVER invent, guess, or assume any email content. You MUST call get_next_email a
       },
       execute: async () => {
         // Get the list of unread emails
-        const listData = await gmailApi({ action: "list", maxResults: 1 });
+        const listData = await outlookApi({ action: "list", maxResults: 1 });
         if (listData.error) return { error: listData.error };
         if (!listData.emails || listData.emails.length === 0) {
           return { done: true, message: "No more unread emails." };
@@ -79,14 +79,14 @@ NEVER invent, guess, or assume any email content. You MUST call get_next_email a
         const email = listData.emails[0];
 
         // Get the full body
-        const bodyData = await gmailApi({
+        const bodyData = await outlookApi({
           action: "read",
           messageId: email.id,
         });
 
         return {
           id: email.id,
-          threadId: email.threadId,
+          conversationId: email.conversationId,
           from: email.from,
           subject: email.subject,
           date: email.date,
@@ -106,23 +106,18 @@ NEVER invent, guess, or assume any email content. You MUST call get_next_email a
             type: "string",
             description: "The ID of the email to reply to",
           },
-          thread_id: {
-            type: "string",
-            description: "The thread ID of the email",
-          },
           reply_text: {
             type: "string",
             description: "The text content of the reply",
           },
         },
-        required: ["message_id", "thread_id", "reply_text"],
+        required: ["message_id", "reply_text"],
         additionalProperties: false,
       },
       execute: async (args: any) => {
-        const data = await gmailApi({
+        const data = await outlookApi({
           action: "reply",
           messageId: args.message_id,
-          threadId: args.thread_id,
           body: args.reply_text,
         });
         if (data.error) return { error: data.error };
@@ -131,27 +126,27 @@ NEVER invent, guess, or assume any email content. You MUST call get_next_email a
     }),
 
     tool({
-      name: "archive_email",
+      name: "delete_email",
       description:
-        "Archive the current email (remove from inbox). Call this when the user says to archive.",
+        "Delete the current email. Call this when the user says to delete.",
       parameters: {
         type: "object",
         properties: {
           message_id: {
             type: "string",
-            description: "The ID of the email to archive",
+            description: "The ID of the email to delete",
           },
         },
         required: ["message_id"],
         additionalProperties: false,
       },
       execute: async (args: any) => {
-        const data = await gmailApi({
-          action: "archive",
+        const data = await outlookApi({
+          action: "delete",
           messageId: args.message_id,
         });
         if (data.error) return { error: data.error };
-        return { success: true, message: "Email archived." };
+        return { success: true, message: "Email deleted." };
       },
     }),
 
@@ -171,7 +166,7 @@ NEVER invent, guess, or assume any email content. You MUST call get_next_email a
         additionalProperties: false,
       },
       execute: async (args: any) => {
-        const data = await gmailApi({
+        const data = await outlookApi({
           action: "markRead",
           messageId: args.message_id,
         });

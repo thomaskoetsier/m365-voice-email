@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { decryptTokens } from "@/app/lib/gmail";
-import { google } from "googleapis";
+import { decryptTokens, getUserEmail } from "@/app/lib/outlook";
 
 export async function GET(request: NextRequest) {
-  const cookie = request.cookies.get("gmail_tokens");
+  const cookie = request.cookies.get("m365_tokens");
   if (!cookie) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -12,11 +11,8 @@ export async function GET(request: NextRequest) {
     // Log session start with user email
     try {
       const tokens = decryptTokens(cookie.value);
-      const oauth2Client = new google.auth.OAuth2();
-      oauth2Client.setCredentials(tokens);
-      const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-      const profile = await gmail.users.getProfile({ userId: "me" });
-      console.log(`session_started: ${profile.data.emailAddress}`);
+      const email = await getUserEmail(tokens);
+      console.log(`session_started: ${email}`);
     } catch {
       console.log("session_started: unknown_user");
     }
