@@ -21,8 +21,8 @@ Open the app on your phone, tap **Start**, and your AI assistant walks through y
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/tomblomfield/voice-email.git
-cd voice-email
+git clone https://github.com/thomaskoetsier/m365-voice-email.git
+cd m365-voice-email
 npm install
 ```
 
